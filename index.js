@@ -63,7 +63,11 @@ const movieTemplate = (movieDetail) => {
 
 createAutoComplete({
 	root: document.querySelector(".autocomplete-one"),
-})
-createAutoComplete({
-	root: document.querySelector(".autocomplete-two"),
+	renderOption(movie) {
+		const imgSrc = movie.Poster === "N/A" ? "" : movie.Poster
+		return `
+            <img src="${imgSrc}"/>
+            ${movie.Title} (${movie.Year})
+        `
+	},
 })
