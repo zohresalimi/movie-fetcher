@@ -18,7 +18,7 @@ const onInput = async (event) => {
 		return
 	}
 	resultWrapper.innerHTML = ""
-	for (movie of movies) {
+	for (let movie of movies) {
 		dropdown.classList.add("is-active")
 		const imgSrc = movie.Poster === "N/A" ? "" : movie.Poster
 
@@ -28,6 +28,11 @@ const onInput = async (event) => {
             <img src="${imgSrc}"/>
             ${movie.Title} 
         `
+		option.addEventListener("click", (event) => {
+			debugger
+			dropdown.classList.remove("is-active")
+			searchInput.value = movie.Title
+		})
 		resultWrapper.appendChild(option)
 	}
 }
