@@ -11,51 +11,59 @@ const fetchData = async (searchTerm) => {
 	return response.data.Search
 }
 
-const onInput = async (event) => {
-	const movies = await fetchData(event.target.value)
-	if (!movies.length) {
-		dropdown.classList.remove("is-active")
-		return
-	}
-	resultWrapper.innerHTML = ""
-	for (let movie of movies) {
-		dropdown.classList.add("is-active")
-		const imgSrc = movie.Poster === "N/A" ? "" : movie.Poster
-
-		const option = document.createElement("a")
-		option.classList.add("dropdown-item")
-		option.innerHTML = `
-            <img src="${imgSrc}"/>
-            ${movie.Title} 
-        `
-		option.addEventListener("click", (event) => {
-			debugger
-			dropdown.classList.remove("is-active")
-			searchInput.value = movie.Title
-		})
-		resultWrapper.appendChild(option)
-	}
+const onMovieSelect = async (movie) => {
+	const response = await axios.get("http://www.omdbapi.com/", {
+		params: {
+			apikey: "20e5b8ea",
+			i: movie.imdbID,
+		},
+	})
+	document.querySelector("#summary").innerHTML = movieTemplate(response.data)
+	console.log(response.data)
 }
 
-const root = document.querySelector(".autocomplete")
-root.innerHTML = `
-    <lable><b>Search For a Movie</b></lable>
-    <input class="input"/>
-    <div class="dropdown">
-        <div class="dropdown-menu">
-            <div class="dropdown-content result">
+const movieTemplate = (movieDetail) => {
+	return `
+        <article class="media">
+            <figure class="media-left">
+                <p class="image">
+                    <img src="${movieDetail.Poster}"/>
+                </p>
+            </figure>
+            <div class="media-content">
+                <div class="content">
+                    <h1> ${movieDetail.Title} </h1>
+                    <h4> ${movieDetail.Genre} </h4>
+                    <p> ${movieDetail.Plot} </p>
+                </div>
             </div>
-        </div>
-    </div>
-`
+        </article>
+        <article class="notification is-primary">
+            <p class="tile"> ${movieDetail.Awards} </p>
+            <p class="subtitle"> Awards </p>
+        </article>
+        <article class="notification is-primary">
+            <p class="tile"> ${movieDetail.BoxOffice} </p>
+            <p class="subtitle"> Box Office </p>
+        </article>
+        <article class="notification is-primary">
+            <p class="tile"> ${movieDetail.Metascore} </p>
+            <p class="subtitle"> Metascore </p>
+        </article>
+        <article class="notification is-primary">
+            <p class="tile"> ${movieDetail.imdbRating} </p>
+            <p class="subtitle"> IMDB Rating </p>
+        </article>
+        <article class="notification is-primary">
+            <p class="tile"> ${movieDetail.imdbVotes} </p>
+            <p class="subtitle"> IMDB Votes </p>
+        </article>
+    `
+}
 
-const searchInput = document.querySelector(".input")
-const dropdown = document.querySelector(".dropdown")
-const resultWrapper = document.querySelector(".result")
-searchInput.addEventListener("input", debounce(onInput, 500))
-
-document.addEventListener("click", (event) => {
-	if (!root.contains(event.target)) {
-		dropdown.classList.remove("is-active")
-	}
+createAutoComplete({
+	root: document.querySelector(".autocomplete-one"),
+})
+createAutoComplete({
+	root: document.querySelector(".autocomplete-two"),
 })
