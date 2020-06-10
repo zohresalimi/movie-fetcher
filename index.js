@@ -10,8 +10,9 @@ const fetchData = async (searchTerm) => {
 	}
 	return response.data.Search
 }
-
-const onMovieSelect = async (movie, summaryElement) => {
+let leftMovie
+let rightMovie
+const onMovieSelect = async (movie, summaryElement, side) => {
 	const response = await axios.get("http://www.omdbapi.com/", {
 		params: {
 			apikey: "20e5b8ea",
@@ -19,10 +20,66 @@ const onMovieSelect = async (movie, summaryElement) => {
 		},
 	})
 	summaryElement.innerHTML = movieTemplate(response.data)
-	console.log(response.data)
+	if (side === "left") {
+		leftMovie = response.data
+	} else {
+		rightMovie = response.data
+	}
+	if (leftMovie && rightMovie) {
+		runComparison()
+	}
+}
+
+const runComparison = () => {
+	const leftSideStats = document.querySelectorAll(
+		"#left-summary .notification"
+	)
+	const rightSideStats = document.querySelectorAll(
+		"#right-summary .notification"
+	)
+	leftSideStats.forEach((leftStat, index) => {
+		const rightStat = rightSideStats[index]
+
+		const leftSideValue = parseInt(leftStat.dataset.value)
+		const rightSideValue = parseInt(rightStat.dataset.value)
+
+		if (rightSideValue > leftSideValue) {
+			leftStat.classList.remove("is-primary")
+			leftStat.classList.add("is-warning")
+		} else {
+			rightStat.classList.remove("is-primary")
+			rightStat.classList.add("is-warning")
+		}
+	})
 }
 
 const movieTemplate = (movieDetail) => {
+	const [dollar, metascore, imdbRating, imdbVotes] = [
+		"BoxOffice",
+		"Metascore",
+		"imdbRating",
+		"imdbVotes",
+	].map((item) => {
+		const value = movieDetail[item]
+		if (!value) {
+			return
+		}
+		if (value !== "N/A") {
+			if (value.indexOf("$") !== -1) {
+				return parseInt(value.replace(/[\$,] /g, ""))
+			}
+
+			return parseInt(value)
+		}
+	})
+	const awards = movieDetail.Awards.split(" ").reduce((acc, item) => {
+		const value = parseInt(item)
+		if (isNaN(value)) {
+			return acc
+		} else {
+			return acc + value
+		}
+	}, 0)
 	return `
         <article class="media">
             <figure class="media-left">
@@ -38,23 +95,23 @@ const movieTemplate = (movieDetail) => {
                 </div>
             </div>
         </article>
-        <article class="notification is-primary">
+        <article data-value="${awards}" class="notification is-primary">
             <p class="tile"> ${movieDetail.Awards} </p>
             <p class="subtitle"> Awards </p>
         </article>
-        <article class="notification is-primary">
+        <article data-value="${dollar}" class="notification is-primary">
             <p class="tile"> ${movieDetail.BoxOffice} </p>
             <p class="subtitle"> Box Office </p>
         </article>
-        <article class="notification is-primary">
+        <article data-value="${metascore}" class="notification is-primary">
             <p class="tile"> ${movieDetail.Metascore} </p>
             <p class="subtitle"> Metascore </p>
         </article>
-        <article class="notification is-primary">
+        <article data-value="${imdbRating}" class="notification is-primary">
             <p class="tile"> ${movieDetail.imdbRating} </p>
             <p class="subtitle"> IMDB Rating </p>
         </article>
-        <article class="notification is-primary">
+        <article data-value="${imdbVotes}" class="notification is-primary">
             <p class="tile"> ${movieDetail.imdbVotes} </p>
             <p class="subtitle"> IMDB Votes </p>
         </article>
@@ -79,7 +136,7 @@ createAutoComplete({
 	...autoCompleteConfig,
 	onOptionSelect(movie) {
 		document.querySelector(".tutorial").classList.add("is-hidden")
-		onMovieSelect(movie, document.querySelector("#left-summary"))
+		onMovieSelect(movie, document.querySelector("#left-summary"), "left")
 	},
 })
 
@@ -88,6 +145,6 @@ createAutoComplete({
 	...autoCompleteConfig,
 	onOptionSelect(movie) {
 		document.querySelector(".tutorial").classList.add("is-hidden")
-		onMovieSelect(movie, document.querySelector("#right-summary"))
+		onMovieSelect(movie, document.querySelector("#right-summary"), "right")
 	},
 })
