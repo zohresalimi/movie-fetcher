@@ -13,6 +13,10 @@ const fetchData = async (searchTerm) => {
 
 const onInput = async (event) => {
 	const movies = await fetchData(event.target.value)
+	if (!movies.length) {
+		dropdown.classList.remove("is-active")
+		return
+	}
 	resultWrapper.innerHTML = ""
 	for (movie of movies) {
 		dropdown.classList.add("is-active")
